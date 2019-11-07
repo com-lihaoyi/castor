@@ -1,8 +1,8 @@
 Castor 0.1.0
 ============
 
-Castor is a lightweight Actor library for Scala and Scala.js, making it very
-easy for you to define asynchronous pipelines or concurrent state machines.
+Castor is a lightweight, typed Actor library for Scala and Scala.js, making it
+very easy for you to define concurrent data pipelines or state machines.
 
 ```scala
 // Mill
@@ -16,16 +16,34 @@ ivy"com.lihaoyi::castor::0.1.0"
 "com.lihaoyi" %%% "castor" % "0.1.0"
 ```
 
-Castor Actors are much more lightweight solution than a full-fledged framework
-like Akka: Castor does not support any sort of distribution or clustering, and
-run entirely within a single process. Castor Actors are garbage collectible, and
-you do not need to manually terminate them or manage their lifecycle.
+Castor Actors are much more lightweight than a full-fledged framework like Akka:
+Castor does not support any sort of distribution or clustering, and runs
+entirely within a single process. Castor Actors are garbage collectible, and you
+do not need to manually terminate them or manage their lifecycle. Castor also
+provides tools to help test your actors deterministically - running them single
+threaded and waiting for async processing to complete - so you can test your
+actor logic without unreliable timing-based assertions.
 
 Castor Actors can be run on both multithreaded and single-threaded environments,
 including compiled to Javascript via Scala.js.
 
-Castor actors are used by the Cask web framework these actors to model
-[websocket server and client connections](http://www.lihaoyi.com/cask/#websockets).
+Castor actors are used heavily in the Cask web framework to model
+[websocket server and client connections](http://www.lihaoyi.com/cask/#websockets),
+in the [databricks/devbox](https://github.com/databricks/devbox) file
+synchronizer, and in several other applications on both JVM and JS runtimes.
+
+- [Castor Actors](#castor-actors)
+- [Writing Actors](#writing-actors)
+  - [Example: Asynchronous Logging using an Actor](#example-asynchronous-logging-using-an-actor)
+  - [Strawman: Synchronized Logging](#strawman-synchronized-logging)
+  - [Parallelism using Actor Pipelines](#parallelism-using-actor-pipelines)
+  - [Batch Logging using BatchActor](#batch-logging-using-batchactor)
+  - [Debounced Logging using State Machines](#debounced-logging-using-state-machines)
+- [Debugging Actors](#debugging-actors)
+  - [Debug Logging State Machines](#debug-logging-state-machines)
+  - [Debugging using Context Logging](#debugging-using-context-logging)
+  - [Running Actors Single Threaded](#running-actors-single-threaded)
+- [Changelog](#changelog)
 
 ## Castor Actors
 
@@ -45,6 +63,10 @@ After a messsage is sent, the thread or actor that called `.send()` can
 immediately go on to do other things, even if the message hasn't been processed
 yet. Messages sent to an actor that is already busy will be queued up until the
 actor is free.
+
+Note that `Actor` is parametrized on the type `T`; `T` specifies what messages a
+particular `Actor` is expected to receive, and is checked at compile to to make
+sure your actors sending messages to one another are wired up correctly.
 
 Castor provides three primary classes you can inherit from to define actors:
 
@@ -86,6 +108,13 @@ different threads at different times, so you should ensure you do not mutate
 shared mutable state otherwise you risk race conditions.
 
 ## Writing Actors
+
+To introduce you to using Castor Actors for writing concurrent data pipelines,
+we will explore a few examples using Castor to write an asynchronous, concurrent
+logging pipeline. This logging pipeline will receive logs from an application,
+and process them in the background without needing the application to stop and
+wait for it.
+
 ### Example: Asynchronous Logging using an Actor
 
 Here is a small demonstration of using a `castor.SimpleActor` to perform
@@ -156,7 +185,12 @@ asynchronous actor processing has completed.
 
 Note that `logger.send` is thread-safe: multiple threads can be sending logging
 messages to the `logger` at once, and the `.send` method will make sure the
-messages are properly queued up and executed one at a time.
+messages are properly queued up and executed one at a time. This has the
+advantage that even when we need to stop the logging and rotate the log file, we
+do not need to worry about other messages being written to the log file while
+that is happening. The application sending logs to `logger` also does not need
+to stop and wait for the log file rotation to complete, and can proceed with its
+execution while the logger does its work in the background.
 
 ### Strawman: Synchronized Logging
 
