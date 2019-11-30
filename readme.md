@@ -1,6 +1,8 @@
 Castor 0.1.0
 ============
 
+[![Join the chat at https://gitter.im/lihaoyi/castor](https://badges.gitter.im/lihaoyi/castor.svg)](https://gitter.im/lihaoyi/castor?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Castor is a lightweight, typed Actor library for Scala and Scala.js, making it
 very easy for you to define concurrent data pipelines or state machines.
 
