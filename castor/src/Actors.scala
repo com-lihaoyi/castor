@@ -73,10 +73,13 @@ abstract class StateMachineActor[T]()(implicit ac: Context) extends SimpleActor[
     def run = run0
   }
   protected[this] def initialState: State
-  protected[this] var state: State = initialState
+  private[this] var state0: State = null
+  protected[this] def state = {
+    if (state0 == null) state0 = initialState
+    state0
+  }
   def run(msg: T): Unit = {
-    assert(state != null)
-    state = state.run(msg)
+    state0 = state.run(msg)
   }
 }
 

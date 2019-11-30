@@ -3,7 +3,7 @@ import mill._, scalalib._, scalajslib._, publish._
 object castor extends Cross[CastorModule]("2.12.10", "2.13.1")
 class CastorModule(crossVersion: String) extends Module {
   trait ActorModule extends CrossScalaModule with PublishModule {
-    def publishVersion = "0.1.0"
+    def publishVersion = "0.1.1"
     def crossScalaVersion = crossVersion
     def pomSettings = PomSettings(
       description = artifactName(),

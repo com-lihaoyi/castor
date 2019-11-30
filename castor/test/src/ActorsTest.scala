@@ -1,4 +1,4 @@
-package cask.actor
+package castor
 import utest._
 object ActorsTest extends TestSuite{
   def tests = Tests{

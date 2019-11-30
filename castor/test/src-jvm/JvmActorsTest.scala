@@ -328,7 +328,7 @@ object JvmActorsTest extends TestSuite{
           java.util.concurrent.Executors.newSingleThreadExecutor()
         )
       ){
-        override def reportRun(a: Actor[_], msg: Any, token: Context.Token): Unit = {
+        override def reportRun(a: castor.Actor[_], msg: Any, token: castor.Context.Token): Unit = {
           println(s"$a <- $msg")
           super.reportRun(a, msg, token)
         }
