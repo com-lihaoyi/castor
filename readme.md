@@ -1,4 +1,4 @@
-Castor 0.1.0
+Castor 0.1.1
 ============
 
 [![Join the chat at https://gitter.im/lihaoyi/castor](https://badges.gitter.im/lihaoyi/castor.svg)](https://gitter.im/lihaoyi/castor?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -8,14 +8,14 @@ very easy for you to define concurrent data pipelines or state machines.
 
 ```scala
 // Mill
-ivy"com.lihaoyi::castor:0.1.0"
+ivy"com.lihaoyi::castor:0.1.1"
 
 // SBT
-"com.lihaoyi" %% "castor" % "0.1.0"
+"com.lihaoyi" %% "castor" % "0.1.1"
 
 // Scala.js
-ivy"com.lihaoyi::castor::0.1.0"
-"com.lihaoyi" %%% "castor" % "0.1.0"
+ivy"com.lihaoyi::castor::0.1.1"
+"com.lihaoyi" %%% "castor" % "0.1.1"
 ```
 
 Castor Actors are much more lightweight than a full-fledged framework like Akka:
@@ -656,6 +656,10 @@ logical bugs without multithreaded parallelism getting in the way.
 
 
 ## Changelog
+
+### 0.1.1
+
+- Fix a `NullPointerException` when trying to use `StateMachineActor` with singleton `object`s
 
 ### 0.1.0
 
