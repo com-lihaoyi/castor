@@ -3,7 +3,7 @@ import mill._, scalalib._, scalajslib._, publish._
 object castor extends Cross[CastorModule]("2.12.10", "2.13.1")
 class CastorModule(crossVersion: String) extends Module {
   trait ActorModule extends CrossScalaModule with PublishModule {
-    def publishVersion = "0.1.1"
+    def publishVersion = "0.1.2"
     def crossScalaVersion = crossVersion
     def pomSettings = PomSettings(
       description = artifactName(),
@@ -25,7 +25,7 @@ class CastorModule(crossVersion: String) extends Module {
       millSourcePath / s"src-$platformSegment"
     )
 
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.1.8")
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.1")
 
     trait ActorTestModule extends Tests {
       def sources = T.sources(
@@ -33,13 +33,19 @@ class CastorModule(crossVersion: String) extends Module {
         millSourcePath / s"src-$platformSegment"
       )
       def testFrameworks = Seq("utest.runner.Framework")
-      def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.1")
+      def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4")
     }
   }
 
   object js extends ActorModule with ScalaJSModule{
     def platformSegment = "js"
     def scalaJSVersion = "0.6.29"
+
+    object test extends ActorTestModule with Tests
+  }
+  object js1 extends ActorModule with ScalaJSModule{
+    def platformSegment = "js"
+    def scalaJSVersion = "1.0.0"
 
     object test extends ActorTestModule with Tests
   }
