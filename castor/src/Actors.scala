@@ -13,7 +13,11 @@ abstract class BaseActor[T]()(implicit ac: Context) extends Actor[T]{
     queue.enqueue((t, token))
     if (!scheduled){
       scheduled = true
-      ac.execute(() => runWithItems())
+      ac.execute(
+        new Runnable{
+          def run(): Unit = runWithItems()
+        }
+      )
     }
   }
   def sendAsync(f: scala.concurrent.Future[T])
@@ -32,7 +36,11 @@ abstract class BaseActor[T]()(implicit ac: Context) extends Actor[T]{
     runBatch0(msgs)
 
     synchronized{
-      if (queue.nonEmpty) ac.execute(() => runWithItems())
+      if (queue.nonEmpty) ac.execute(
+        new Runnable{
+          def run(): Unit = runWithItems()
+        }
+      )
       else{
         assert(scheduled)
         scheduled = false
