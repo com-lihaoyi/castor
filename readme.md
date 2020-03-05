@@ -13,7 +13,7 @@ ivy"com.lihaoyi::castor:0.1.1"
 // SBT
 "com.lihaoyi" %% "castor" % "0.1.1"
 
-// Scala.js
+// Scala.js / Scala Native
 ivy"com.lihaoyi::castor::0.1.1"
 "com.lihaoyi" %%% "castor" % "0.1.1"
 ```
