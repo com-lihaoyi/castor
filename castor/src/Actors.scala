@@ -87,3 +87,8 @@ class ProxyActor[T, V](f: T => V, downstream: Actor[V])
                       (implicit ac: Context) extends SimpleActor[T]{
   def run(msg: T): Unit = downstream.send(f(msg))
 }
+
+class SplitActor[T](downstreams: Actor[T]*)
+                   (implicit ac: Context) extends SimpleActor[T]{
+  def run(msg: T): Unit = downstreams.foreach(_.send(msg))
+}
