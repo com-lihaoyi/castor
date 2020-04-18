@@ -48,7 +48,8 @@ object castor extends Module {
   class ActorJsModule(crossScalaVersion: String, crossScalaJsVersion: String) extends ActorModule(crossScalaVersion) with ScalaJSModule {
     def platformSegment = "js"
     def scalaJSVersion = crossScalaJsVersion
-    object test extends ActorTestModule {
+    def millSourcePath = super.millSourcePath / os.up
+    object test extends Tests with ActorTestModule {
       def platformSegment = "js"
       def scalaVersion = crossScalaVersion
     }
@@ -67,7 +68,7 @@ object castor extends Module {
   class ActorNativeModule(crossScalaVersion: String, crossScalaNativeVersion: String) extends ActorModule(crossScalaVersion) with ScalaNativeModule {
     def platformSegment = "native"
     def scalaNativeVersion = crossScalaNativeVersion
-
+    def millSourcePath = super.millSourcePath / os.up
     object test extends Tests with ActorTestModule {
       def platformSegment = "native"
     }

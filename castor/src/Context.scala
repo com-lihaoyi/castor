@@ -167,9 +167,11 @@ object Context{
                        line: sourcecode.Line) = {
       val token = reportSchedule(a, msg, fileName, line)
       scheduler.schedule[Unit](
-        () => {
-          a.send(msg)(fileName, line)
-          reportComplete(token)
+        new java.util.concurrent.Callable[Unit] {
+          def call(): Unit = {
+            a.send(msg)(fileName, line)
+            reportComplete(token)
+          }
         },
         delay.toMillis,
         TimeUnit.MILLISECONDS
