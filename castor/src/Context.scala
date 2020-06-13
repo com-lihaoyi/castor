@@ -1,9 +1,7 @@
 package castor
 import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, CanAwait, ExecutionContext, Future, Promise}
-import scala.util.Try
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 
 /**
  * An extended `scala.concurrent.ExecutionContext`; provides the ability to
