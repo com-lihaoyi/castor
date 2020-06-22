@@ -8,7 +8,7 @@ import scala.util.Try
 /**
  * An extended `scala.concurrent.ExecutionContext`; provides the ability to
  * schedule messages to be sent later, and hooks to track the current number of
- * outstanding tasks or log the actor message sends for debugging purporses
+ * outstanding tasks or log the actor message sends for debugging purposes
  */
 trait Context extends ExecutionContext {
   def reportSchedule(): Context.Token = new Context.Token.Simple()
