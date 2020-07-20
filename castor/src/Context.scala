@@ -1,14 +1,12 @@
 package castor
 import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, CanAwait, ExecutionContext, Future, Promise}
-import scala.util.Try
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 
 /**
  * An extended `scala.concurrent.ExecutionContext`; provides the ability to
  * schedule messages to be sent later, and hooks to track the current number of
- * outstanding tasks or log the actor message sends for debugging purporses
+ * outstanding tasks or log the actor message sends for debugging purposes
  */
 trait Context extends ExecutionContext {
   def reportSchedule(): Context.Token = new Context.Token.Simple()
