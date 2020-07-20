@@ -72,10 +72,13 @@ object Context{
   }
 
   object Simple{
-    implicit val global: Simple = new Simple(scala.concurrent.ExecutionContext.Implicits.global, _.printStackTrace())
+    lazy val executionContext = ExecutionContext.fromExecutorService(
+      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
+    )
+    implicit val global: Simple = new Simple(executionContext, _.printStackTrace())
   }
 
-  class Test(ec: ExecutionContext = scala.concurrent.ExecutionContext.global,
+  class Test(ec: ExecutionContext = Simple.executionContext,
              logEx: Throwable => Unit = _.printStackTrace()) extends Context.Impl {
     private[this] val active = collection.mutable.Set.empty[Context.Token]
     private[this] var promise = concurrent.Promise.successful[Unit](())
