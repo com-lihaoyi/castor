@@ -6,7 +6,7 @@ val scalaNativeVersions = Seq("0.3.9", "0.4.0-M2")
 
 object castor extends Module {
   abstract class ActorModule(crossVersion: String) extends CrossScalaModule with PublishModule {
-    def publishVersion = "0.1.4"
+    def publishVersion = "0.1.5"
     def crossScalaVersion = crossVersion
     def pomSettings = PomSettings(
       description = artifactName(),

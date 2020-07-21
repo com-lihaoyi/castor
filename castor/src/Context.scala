@@ -71,7 +71,7 @@ object Context{
 
   object Simple{
     lazy val executionContext = ExecutionContext.fromExecutorService(
-      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
+      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     )
     implicit val global: Simple = new Simple(executionContext, _.printStackTrace())
   }
