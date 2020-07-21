@@ -1,4 +1,4 @@
-Castor 0.1.5
+Castor 0.1.7
 ============
 
 [![Join the chat at https://gitter.im/lihaoyi/castor](https://badges.gitter.im/lihaoyi/castor.svg)](https://gitter.im/lihaoyi/castor?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -8,14 +8,14 @@ very easy for you to define concurrent data pipelines or state machines.
 
 ```scala
 // Mill
-ivy"com.lihaoyi::castor:0.1.5"
+ivy"com.lihaoyi::castor:0.1.7"
 
 // SBT
-"com.lihaoyi" %% "castor" % "0.1.5"
+"com.lihaoyi" %% "castor" % "0.1.7"
 
 // Scala.js / Scala Native
-ivy"com.lihaoyi::castor::0.1.5"
-"com.lihaoyi" %%% "castor" % "0.1.5"
+ivy"com.lihaoyi::castor::0.1.7"
+"com.lihaoyi" %%% "castor" % "0.1.7"
 ```
 
 Castor Actors are much more lightweight than a full-fledged framework like Akka:
@@ -658,10 +658,10 @@ logical bugs without multithreaded parallelism getting in the way.
 ## Changelog
 
 
-### 0.1.5
+### 0.1.7
 
-- Remove usage of `scala.concurrent.ExecutionContext.global` in favor of instantiating our
-  own thread pool
+- Remove usage of `scala.concurrent.ExecutionContext.global` in favor of
+  instantiating our own thread pool for `castor.Context.Simple.global`
 
 ### 0.1.1
 

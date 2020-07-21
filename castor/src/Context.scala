@@ -64,35 +64,68 @@ object Context{
     }
   }
 
+  /**
+   * Castor actor context based on a Scala ExecutionContext
+   */
   class Simple(ec: ExecutionContext, logEx: Throwable => Unit) extends Context.Impl {
     def executionContext = ec
     def reportFailure(t: Throwable) = logEx(t)
   }
 
   object Simple{
-    lazy val executionContext = ExecutionContext.fromExecutorService(
-      Executors.newFixedThreadPool(
-        Runtime.getRuntime().availableProcessors(),
-        new ThreadFactory {
-          override def newThread(r: Runnable) = {
-            val t = new Thread(r)
-            t.setDaemon(true)
-            t
-          }
-        }
-      )
-    )
+    lazy val threadPool = makeThreadPool(Runtime.getRuntime().availableProcessors(), true)
+    lazy val executionContext = ExecutionContext.fromExecutorService(threadPool)
     implicit lazy val global: Simple = new Simple(executionContext, _.printStackTrace())
   }
+  def makeThreadPool(numThreads: Int, daemon: Boolean) = Executors.newFixedThreadPool(
+    numThreads,
+    new ThreadFactory {
+      override def newThread(r: Runnable) = {
+        val t = new Thread(r)
+        t.setDaemon(daemon)
+        t
+      }
+    }
+  )
 
-  class Test(ec: ExecutionContext = Simple.executionContext,
-             logEx: Throwable => Unit = _.printStackTrace()) extends Context.Impl {
+  /**
+   * Castor actor context based on a fixed thread pool
+   */
+  class ThreadPool(numThreads: Int = Runtime.getRuntime().availableProcessors(),
+                   daemon: Boolean = true,
+                   logEx: Throwable => Unit = _.printStackTrace()) extends Context.Impl{
+    val threadPool = makeThreadPool(numThreads, daemon)
+
+    val executionContext = ExecutionContext.fromExecutorService(threadPool)
+
+    def reportFailure(cause: Throwable): Unit = logEx(cause)
+    def shutdown() = threadPool.shutdownNow()
+  }
+
+  /**
+   * [[castor.Context.Simple]] used for testing; tracks scheduling and completion of
+   * tasks and futures, so we can support a `.waitForInactivity()` method to wait
+   * until the system is quiescient
+   */
+  class Test(executionContext: ExecutionContext = Simple.executionContext,
+             logEx: Throwable => Unit = _.printStackTrace())
+    extends Simple(executionContext, logEx) with TestBase
+
+  /**
+   * [[castor.Context.ThreadPool]] used for testing; tracks scheduling and completion of
+   * tasks and futures, so we can support a `.waitForInactivity()` method to wait
+   * until the system is quiescient
+   */
+  class TestThreadPool(numThreads: Int = Runtime.getRuntime().availableProcessors(),
+                       daemon: Boolean = true,
+                       logEx: Throwable => Unit = _.printStackTrace())
+    extends ThreadPool(numThreads, daemon, logEx) with TestBase
+
+  trait TestBase extends Context.Impl {
+    def executionContext: ExecutionContext
     private[this] val active = collection.mutable.Set.empty[Context.Token]
     private[this] var promise = concurrent.Promise.successful[Unit](())
 
-    def executionContext = ec
-
-    def reportFailure(t: Throwable) = logEx(t)
 
     def handleReportSchedule(token: Context.Token) = synchronized{
       if (active.isEmpty) {
