@@ -9,6 +9,17 @@ import scala.concurrent.{Await, ExecutionContext, Future, Promise}
  * outstanding tasks or log the actor message sends for debugging purposes
  */
 trait Context extends ExecutionContext {
+  def softQueueLimit: Int = Int.MaxValue
+  val blocking = new MultiBiMap[BaseActor[_], BaseActor[_]]
+  def isBlocked(sender: BaseActor[_]): Boolean = {
+    blocking.containsValue(sender)
+  }
+  def clearBlocking(receiver: BaseActor[_]) = synchronized{
+    blocking.removeAll(receiver).filter(!isBlocked(_))
+  }
+  def reportBlocking(sender: BaseActor[_], receiver: BaseActor[_]) = synchronized{
+    blocking.add(receiver, sender)
+  }
   def reportSchedule(): Context.Token = new Context.Token.Simple()
 
   def reportSchedule(fileName: sourcecode.FileName,

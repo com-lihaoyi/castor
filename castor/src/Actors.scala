@@ -3,28 +3,31 @@ import collection.mutable
 
 abstract class BaseActor[T]()(implicit ac: Context) extends Actor[T]{
   private val queue = new mutable.Queue[(T, Context.Token)]()
-
+  def softQueueLimit = ac.softQueueLimit
+  implicit def self = this
   private var scheduled = false
+
+  def scheduleRun() = ac.execute(new Runnable{def run(): Unit = runWithItems()})
+
 
   def send(t: T)
           (implicit fileName: sourcecode.FileName,
-           line: sourcecode.Line): Unit = synchronized{
+           line: sourcecode.Line,
+           sender: BaseActor[_]): Unit = synchronized{
     val token = ac.reportSchedule(this, t, fileName, line)
     queue.enqueue((t, token))
-    if (!scheduled){
+    if (queue.length > softQueueLimit) ac.reportBlocking(sender, this)
+    if (!ac.isBlocked(this) && !scheduled){
       scheduled = true
-      ac.execute(
-        new Runnable{
-          def run(): Unit = runWithItems()
-        }
-      )
+      scheduleRun()
     }
   }
   def sendAsync(f: scala.concurrent.Future[T])
                (implicit fileName: sourcecode.FileName,
-                line: sourcecode.Line) = {
+                line: sourcecode.Line,
+                sender: BaseActor[_]) = {
     f.onComplete{
-      case scala.util.Success(v) => this.send(v)
+      case scala.util.Success(v) => this.send(v)(fileName, line, sender)
       case scala.util.Failure(e) => ac.reportFailure(e)
     }
   }
@@ -33,16 +36,15 @@ abstract class BaseActor[T]()(implicit ac: Context) extends Actor[T]{
   private[this] def runWithItems(): Unit = {
     val msgs = synchronized(queue.dequeueAll(_ => true))
 
-    runBatch0(msgs)
+    if (msgs.nonEmpty) runBatch0(msgs)
 
     synchronized{
-      if (queue.nonEmpty) ac.execute(
-        new Runnable{
-          def run(): Unit = runWithItems()
-        }
-      )
+      if (queue.nonEmpty) this.scheduleRun()
       else{
         assert(scheduled)
+        for(noLongerBlocked <- ac.clearBlocking(this)){
+          noLongerBlocked.scheduleRun()
+        }
         scheduled = false
       }
     }
