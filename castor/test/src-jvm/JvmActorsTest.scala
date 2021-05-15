@@ -2,6 +2,143 @@ package test.castor
 
 import utest._
 object JvmActorsTest extends TestSuite{
+  object actor {
+    class Logger(log: os.Path, old: os.Path, rotateSize: Int)
+                (implicit ac: castor.Context) extends castor.SimpleActor[String]{
+      def run(s: String) = {
+        val newLogSize = logSize + s.length + 1
+        if (newLogSize <= rotateSize) logSize = newLogSize
+        else {
+          logSize = s.length
+          os.move(log, old, replaceExisting = true)
+        }
+        os.write.append(log, s + "\n", createFolders = true)
+      }
+      private var logSize = 0
+    }
+  }
+  object pipeline {
+    class Writer(log: os.Path, old: os.Path, rotateSize: Int)
+                (implicit ac: castor.Context) extends castor.SimpleActor[String]{
+      def run(s: String) = {
+        val newLogSize = logSize + s.length + 1
+        if (newLogSize <= rotateSize) logSize = newLogSize
+        else {
+          logSize = s.length
+          os.move(log, old, replaceExisting = true)
+        }
+        os.write.append(log, s + "\n", createFolders = true)
+      }
+      private var logSize = 0
+    }
+
+    class Logger(dest: castor.Actor[String])
+                (implicit ac: castor.Context) extends castor.SimpleActor[String]{
+      def run(s: String) = dest.send(java.util.Base64.getEncoder.encodeToString(s.getBytes))
+    }
+  }
+  object batch {
+    sealed trait Msg
+      case class Text(value: String) extends Msg
+      case class Rotate() extends Msg
+      class Writer(log: os.Path, old: os.Path)
+                  (implicit ac: castor.Context) extends castor.BatchActor[Msg]{
+        def runBatch(msgs: Seq[Msg]): Unit = {
+          msgs.lastIndexOf(Rotate()) match{
+            case -1 => os.write.append(log, groupMsgs(msgs), createFolders = true)
+            case rotateIndex =>
+              val prevRotateIndex = msgs.lastIndexOf(Rotate(), rotateIndex - 1)
+              if (prevRotateIndex != -1) os.remove.all(log)
+              os.write.append(log, groupMsgs(msgs.slice(prevRotateIndex, rotateIndex)), createFolders = true)
+              os.move(log, old, replaceExisting = true)
+              os.write.over(log, groupMsgs(msgs.drop(rotateIndex)), createFolders = true)
+          }
+        }
+        def groupMsgs(msgs: Seq[Msg]) = msgs.collect{case Text(value) => value}.mkString("\n") + "\n"
+      }
+
+      class Logger(dest: castor.Actor[Msg], rotateSize: Int)
+                  (implicit ac: castor.Context) extends castor.SimpleActor[String]{
+        def run(s: String) = {
+          val newLogSize = logSize + s.length + 1
+          if (newLogSize <= rotateSize) logSize = newLogSize
+          else {
+            logSize = s.length
+            dest.send(Rotate())
+          }
+          dest.send(Text(s))
+        }
+        private var logSize = 0
+      }
+  }
+  object debounce {
+    sealed trait Msg
+    case class Debounced() extends Msg
+    case class Text(value: String) extends Msg
+
+    class Logger(log: os.Path, debounceTime: java.time.Duration)
+                (implicit ac: castor.Context) extends castor.StateMachineActor[Msg]{
+      def initialState = Idle()
+      case class Idle() extends State({
+        case Text(value) =>
+          ac.scheduleMsg(this, Debounced(), debounceTime)
+          Buffering(Vector(value))
+      })
+      case class Buffering(buffer: Vector[String]) extends State({
+        case Text(value) => Buffering(buffer :+ value)
+        case Debounced() =>
+          os.write.append(log, buffer.mkString(" ") + "\n", createFolders = true)
+          Idle()
+      })
+    }
+  }
+  object log {
+    sealed trait Msg
+    case class Debounced() extends Msg
+    case class Text(value: String) extends Msg
+
+    class Logger(log: os.Path, debounceTime: java.time.Duration)
+                (implicit ac: castor.Context) extends castor.StateMachineActor[Msg]{
+      def initialState = Idle()
+      case class Idle() extends State({
+        case Text(value) =>
+          ac.scheduleMsg(this, Debounced(), debounceTime)
+          Buffering(Vector(value))
+      })
+      case class Buffering(buffer: Vector[String]) extends State({
+        case Text(value) => Buffering(buffer :+ value)
+        case Debounced() =>
+          os.write.append(log, buffer.mkString(" ") + "\n", createFolders = true)
+          Idle()
+      })
+
+      override def run(msg: Msg): Unit = {
+        println(s"$state + $msg -> ")
+        super.run(msg)
+        println(state)
+      }
+    }
+  }
+  object pipelineLog {
+    class Writer(log: os.Path, old: os.Path, rotateSize: Int)
+                (implicit ac: castor.Context) extends castor.SimpleActor[String]{
+      def run(s: String) = {
+        val newLogSize = logSize + s.length + 1
+        if (newLogSize <= rotateSize) logSize = newLogSize
+        else {
+          logSize = s.length
+          os.move(log, old, replaceExisting = true)
+        }
+        os.write.append(log, s + "\n", createFolders = true)
+      }
+      private var logSize = 0
+    }
+
+    class Logger(dest: castor.Actor[String])
+                (implicit ac: castor.Context) extends castor.SimpleActor[String]{
+      def run(s: String) = dest.send(java.util.Base64.getEncoder.encodeToString(s.getBytes))
+    }
+  }
   def tests = Tests{
     os.remove.all(os.pwd / "out" / "scratch")
     test("lock"){
@@ -36,26 +173,14 @@ object JvmActorsTest extends TestSuite{
     }
 
     test("actor"){
-      class Logger(log: os.Path, old: os.Path, rotateSize: Int)
-                  (implicit ac: castor.Context) extends castor.SimpleActor[String]{
-        def run(s: String) = {
-          val newLogSize = logSize + s.length + 1
-          if (newLogSize <= rotateSize) logSize = newLogSize
-          else {
-            logSize = s.length
-            os.move(log, old, replaceExisting = true)
-          }
-          os.write.append(log, s + "\n", createFolders = true)
-        }
-        private var logSize = 0
-      }
+      import actor._
 
-      implicit val ac = new castor.Context.Test()
+      val ac = new castor.Context.Test()
 
       val logPath = os.pwd / "out" / "scratch" / "log.txt"
       val oldPath  = os.pwd / "out" / "scratch" / "log-old.txt"
 
-      val logger = new Logger(logPath, oldPath, rotateSize = 50)
+      val logger = new Logger(logPath, oldPath, rotateSize = 50)(ac)
 
       logger.send("I am cow")
       logger.send("hear me moo")
@@ -75,24 +200,7 @@ object JvmActorsTest extends TestSuite{
     }
 
     test("pipeline"){
-      class Writer(log: os.Path, old: os.Path, rotateSize: Int)
-                  (implicit ac: castor.Context) extends castor.SimpleActor[String]{
-        def run(s: String) = {
-          val newLogSize = logSize + s.length + 1
-          if (newLogSize <= rotateSize) logSize = newLogSize
-          else {
-            logSize = s.length
-            os.move(log, old, replaceExisting = true)
-          }
-          os.write.append(log, s + "\n", createFolders = true)
-        }
-        private var logSize = 0
-      }
-
-      class Logger(dest: castor.Actor[String])
-                  (implicit ac: castor.Context) extends castor.SimpleActor[String]{
-        def run(s: String) = dest.send(java.util.Base64.getEncoder.encodeToString(s.getBytes))
-      }
+      import pipeline._
 
       implicit val ac = new castor.Context.Test()
 
@@ -125,38 +233,7 @@ object JvmActorsTest extends TestSuite{
     }
 
     test("batch"){
-      sealed trait Msg
-      case class Text(value: String) extends Msg
-      case class Rotate() extends Msg
-      class Writer(log: os.Path, old: os.Path)
-                  (implicit ac: castor.Context) extends castor.BatchActor[Msg]{
-        def runBatch(msgs: Seq[Msg]): Unit = {
-          msgs.lastIndexOf(Rotate()) match{
-            case -1 => os.write.append(log, groupMsgs(msgs), createFolders = true)
-            case rotateIndex =>
-              val prevRotateIndex = msgs.lastIndexOf(Rotate(), rotateIndex - 1)
-              if (prevRotateIndex != -1) os.remove.all(log)
-              os.write.append(log, groupMsgs(msgs.slice(prevRotateIndex, rotateIndex)), createFolders = true)
-              os.move(log, old, replaceExisting = true)
-              os.write.over(log, groupMsgs(msgs.drop(rotateIndex)), createFolders = true)
-          }
-        }
-        def groupMsgs(msgs: Seq[Msg]) = msgs.collect{case Text(value) => value}.mkString("\n") + "\n"
-      }
-
-      class Logger(dest: castor.Actor[Msg], rotateSize: Int)
-                  (implicit ac: castor.Context) extends castor.SimpleActor[String]{
-        def run(s: String) = {
-          val newLogSize = logSize + s.length + 1
-          if (newLogSize <= rotateSize) logSize = newLogSize
-          else {
-            logSize = s.length
-            dest.send(Rotate())
-          }
-          dest.send(Text(s))
-        }
-        private var logSize = 0
-      }
+      import batch._
 
       implicit val ac = new castor.Context.Test()
 
@@ -184,25 +261,7 @@ object JvmActorsTest extends TestSuite{
     }
 
     test("debounce"){
-      sealed trait Msg
-      case class Debounced() extends Msg
-      case class Text(value: String) extends Msg
-
-      class Logger(log: os.Path, debounceTime: java.time.Duration)
-                  (implicit ac: castor.Context) extends castor.StateMachineActor[Msg]{
-        def initialState = Idle()
-        case class Idle() extends State({
-          case Text(value) =>
-            ac.scheduleMsg(this, Debounced(), debounceTime)
-            Buffering(Vector(value))
-        })
-        case class Buffering(buffer: Vector[String]) extends State({
-          case Text(value) => Buffering(buffer :+ value)
-          case Debounced() =>
-            os.write.append(log, buffer.mkString(" ") + "\n", createFolders = true)
-            Idle()
-        })
-      }
+      import debounce._
 
       implicit val ac = new castor.Context.Test()
 
@@ -226,35 +285,11 @@ object JvmActorsTest extends TestSuite{
       os.read.lines(logPath) ==> Seq(
         "I am cow hear me moo",
         "I weight twice as much as you And I look good on the barbecue",
-        "Yoghurt curds cream cheese and butter Comes from liquids from my udder I am cow, I am cow Hear me moo, moooo",
+        "Yoghurt curds cream cheese and butter Comes from liquids from my udder I am cow, I am cow Hear me moo, moooo"
       )
     }
     test("log"){
-      sealed trait Msg
-      case class Debounced() extends Msg
-      case class Text(value: String) extends Msg
-
-      class Logger(log: os.Path, debounceTime: java.time.Duration)
-                  (implicit ac: castor.Context) extends castor.StateMachineActor[Msg]{
-        def initialState = Idle()
-        case class Idle() extends State({
-          case Text(value) =>
-            ac.scheduleMsg(this, Debounced(), debounceTime)
-            Buffering(Vector(value))
-        })
-        case class Buffering(buffer: Vector[String]) extends State({
-          case Text(value) => Buffering(buffer :+ value)
-          case Debounced() =>
-            os.write.append(log, buffer.mkString(" ") + "\n", createFolders = true)
-            Idle()
-        })
-
-        override def run(msg: Msg): Unit = {
-          println(s"$state + $msg -> ")
-          super.run(msg)
-          println(state)
-        }
-      }
+      import log._
 
       implicit val ac = new castor.Context.Test()
 
@@ -300,28 +335,11 @@ object JvmActorsTest extends TestSuite{
       os.read.lines(logPath) ==> Seq(
         "I am cow hear me moo",
         "I weight twice as much as you And I look good on the barbecue",
-        "Yoghurt curds cream cheese and butter Comes from liquids from my udder I am cow, I am cow Hear me moo, moooo",
+        "Yoghurt curds cream cheese and butter Comes from liquids from my udder I am cow, I am cow Hear me moo, moooo"
       )
     }
     test("pipelineLog"){
-      class Writer(log: os.Path, old: os.Path, rotateSize: Int)
-                  (implicit ac: castor.Context) extends castor.SimpleActor[String]{
-        def run(s: String) = {
-          val newLogSize = logSize + s.length + 1
-          if (newLogSize <= rotateSize) logSize = newLogSize
-          else {
-            logSize = s.length
-            os.move(log, old, replaceExisting = true)
-          }
-          os.write.append(log, s + "\n", createFolders = true)
-        }
-        private var logSize = 0
-      }
-
-      class Logger(dest: castor.Actor[String])
-                  (implicit ac: castor.Context) extends castor.SimpleActor[String]{
-        def run(s: String) = dest.send(java.util.Base64.getEncoder.encodeToString(s.getBytes))
-      }
+      import pipelineLog._
 
       implicit val ac = new castor.Context.Test(
         scala.concurrent.ExecutionContext.fromExecutor(
