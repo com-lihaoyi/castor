@@ -1,12 +1,31 @@
 import mill._, scalalib._, scalajslib._, scalanativelib._, publish._
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
+import de.tobiasroeser.mill.vcs.version.VcsVersion
 
-val scalaVersions = Seq("2.12.10", "2.13.1")
-val scalaJsVersions = Seq("0.6.32", "1.0.0")
-val scalaNativeVersions = Seq("0.3.9", "0.4.0-M2")
+val dottyCustomVersion = sys.props.get("dottyVersion")
+
+val scala211 = "2.11.12"
+val scala212 = "2.12.13"
+val scala213 = "2.13.4"
+val scala3 = "3.0.0"
+
+val scalaVersions = scala213 :: scala212 :: scala211 :: scala3 :: dottyCustomVersion.toList
+val scala2Versions = scalaVersions.filter(_.startsWith("2."))
+
+val scalaJSVersions = for {
+  scalaV <- scalaVersions
+  scalaJSV <- Seq("0.6.33", "1.5.1")
+  if scalaV.startsWith("2.") || scalaJSV.startsWith("1.")
+} yield (scalaV, scalaJSV)
+
+val scalaNativeVersions = for {
+  scalaV <- scala2Versions
+  scalaNativeV <- Seq("0.4.0")
+} yield (scalaV, scalaNativeV)
 
 object castor extends Module {
   abstract class ActorModule(crossVersion: String) extends CrossScalaModule with PublishModule {
-    def publishVersion = "0.1.7"
+    def publishVersion = VcsVersion.vcsState().format()
     def crossScalaVersion = crossVersion
     def pomSettings = PomSettings(
       description = artifactName(),
@@ -28,23 +47,18 @@ object castor extends Module {
       millSourcePath / s"src-$platformSegment"
     )
 
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.1")
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.7")
   }
-  trait ActorTestModule extends ScalaModule with TestModule {
+  trait ActorTestModule extends ScalaModule with TestModule.Utest {
     def platformSegment: String
     def sources = T.sources(
       millSourcePath / "src",
       millSourcePath / s"src-$platformSegment"
     )
-    def testFrameworks = Seq("utest.runner.Framework")
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4")
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.10")
   }
 
-  val jsVersions = for {
-    sv <- scalaVersions
-    sjsv <- scalaJsVersions
-  } yield (sv, sjsv)
-  object js extends Cross[ActorJsModule](jsVersions:_*)
+  object js extends Cross[ActorJsModule](scalaJSVersions:_*)
   class ActorJsModule(crossScalaVersion: String, crossScalaJsVersion: String) extends ActorModule(crossScalaVersion) with ScalaJSModule {
     def platformSegment = "js"
     def scalaJSVersion = crossScalaJsVersion
@@ -60,11 +74,11 @@ object castor extends Module {
     object test extends Tests with ActorTestModule{
       def platformSegment: String = "jvm"
       def ivyDeps = super.ivyDeps() ++ Agg(
-        ivy"com.lihaoyi::os-lib:0.4.2"
+        ivy"com.lihaoyi::os-lib:0.7.7"
       )
     }
   }
-  object native extends Cross[ActorNativeModule](scalaNativeVersions.map("2.11.12" -> _):_*)
+  object native extends Cross[ActorNativeModule](scalaNativeVersions:_*)
   class ActorNativeModule(crossScalaVersion: String, crossScalaNativeVersion: String) extends ActorModule(crossScalaVersion) with ScalaNativeModule {
     def platformSegment = "native"
     def scalaNativeVersion = crossScalaNativeVersion
