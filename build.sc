@@ -1,6 +1,8 @@
 import mill._, scalalib._, scalajslib._, scalanativelib._, publish._
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
+import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.4`
+import com.github.lolgab.mill.mima._
 
 val dottyCustomVersion = sys.props.get("dottyVersion")
 
@@ -24,8 +26,9 @@ val scalaNativeVersions = for {
 } yield (scalaV, scalaNativeV)
 
 object castor extends Module {
-  abstract class ActorModule(crossVersion: String) extends CrossScalaModule with PublishModule {
+  abstract class ActorModule(crossVersion: String) extends CrossScalaModule with PublishModule with Mima {
     def publishVersion = VcsVersion.vcsState().format()
+    def mimaPreviousVersions = VcsVersion.vcsState().lastTag.toSeq
     def crossScalaVersion = crossVersion
     def pomSettings = PomSettings(
       description = artifactName(),
