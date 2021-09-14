@@ -194,6 +194,7 @@ object Context{
       p.future
     }
 
+    @deprecated("Do not depend on scheduler directly. Use scheduleMsg instead")
     lazy val scheduler = Executors.newSingleThreadScheduledExecutor(
       new ThreadFactory {
         def newThread(r: Runnable): Thread = {
@@ -222,14 +223,4 @@ object Context{
     }
   }
 
-}
-
-trait Actor[T]{
-  def send(t: T)
-          (implicit fileName: sourcecode.FileName,
-           line: sourcecode.Line): Unit
-
-  def sendAsync(f: scala.concurrent.Future[T])
-               (implicit fileName: sourcecode.FileName,
-                line: sourcecode.Line): Unit
 }
