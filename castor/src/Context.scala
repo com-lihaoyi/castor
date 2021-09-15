@@ -1,4 +1,5 @@
 package castor
+
 import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
 
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
@@ -8,7 +9,7 @@ import scala.concurrent.{Await, ExecutionContext, Future, Promise}
  * schedule messages to be sent later, and hooks to track the current number of
  * outstanding tasks or log the actor message sends for debugging purposes
  */
-trait Context extends ExecutionContext {
+trait Context extends ExecutionContext with platform.Context {
   def reportSchedule(): Context.Token = new Context.Token.Simple()
 
   def reportSchedule(fileName: sourcecode.FileName,
@@ -29,10 +30,6 @@ trait Context extends ExecutionContext {
 
   def reportComplete(token: Context.Token): Unit = ()
 
-  def scheduleMsg[T](a: Actor[T], msg: T, time: java.time.Duration)
-                    (implicit fileName: sourcecode.FileName,
-                     line: sourcecode.Line): Unit
-
   def future[T](t: => T)
                (implicit fileName: sourcecode.FileName,
                 line: sourcecode.Line): Future[T]
@@ -40,7 +37,7 @@ trait Context extends ExecutionContext {
   def execute(runnable: Runnable): Unit
 }
 
-object Context{
+object Context extends platform.ContextCompanionObject {
   trait Token
   object Token{
     class Simple extends Token(){
@@ -72,34 +69,9 @@ object Context{
     def reportFailure(t: Throwable) = logEx(t)
   }
 
-  object Simple{
-    lazy val threadPool = makeThreadPool(Runtime.getRuntime().availableProcessors(), true)
-    lazy val executionContext = ExecutionContext.fromExecutorService(threadPool)
+  object Simple extends ContextSimpleCompanionObject {
+    lazy val executionContext = platform.Platform.executionContext
     implicit lazy val global: Simple = new Simple(executionContext, _.printStackTrace())
-  }
-  def makeThreadPool(numThreads: Int, daemon: Boolean) = Executors.newFixedThreadPool(
-    numThreads,
-    new ThreadFactory {
-      override def newThread(r: Runnable) = {
-        val t = new Thread(r)
-        t.setDaemon(daemon)
-        t
-      }
-    }
-  )
-
-  /**
-   * Castor actor context based on a fixed thread pool
-   */
-  class ThreadPool(numThreads: Int = Runtime.getRuntime().availableProcessors(),
-                   daemon: Boolean = true,
-                   logEx: Throwable => Unit = _.printStackTrace()) extends Context.Impl{
-    val threadPool = makeThreadPool(numThreads, daemon)
-
-    val executionContext = ExecutionContext.fromExecutorService(threadPool)
-
-    def reportFailure(cause: Throwable): Unit = logEx(cause)
-    def shutdown() = threadPool.shutdownNow()
   }
 
   /**
@@ -110,16 +82,6 @@ object Context{
   class Test(executionContext: ExecutionContext = Simple.executionContext,
              logEx: Throwable => Unit = _.printStackTrace())
     extends Simple(executionContext, logEx) with TestBase
-
-  /**
-   * [[castor.Context.ThreadPool]] used for testing; tracks scheduling and completion of
-   * tasks and futures, so we can support a `.waitForInactivity()` method to wait
-   * until the system is quiescient
-   */
-  class TestThreadPool(numThreads: Int = Runtime.getRuntime().availableProcessors(),
-                       daemon: Boolean = true,
-                       logEx: Throwable => Unit = _.printStackTrace())
-    extends ThreadPool(numThreads, daemon, logEx) with TestBase
 
   trait TestBase extends Context.Impl {
     def executionContext: ExecutionContext
@@ -167,7 +129,7 @@ object Context{
     }
   }
 
-  trait Impl extends Context {
+  trait Impl extends Context with platform.ContextImpl {
     def executionContext: ExecutionContext
 
     def execute(runnable: Runnable): Unit = {
@@ -193,43 +155,6 @@ object Context{
       })
       p.future
     }
-
-    lazy val scheduler = Executors.newSingleThreadScheduledExecutor(
-      new ThreadFactory {
-        def newThread(r: Runnable): Thread = {
-          val t = new Thread(r, "ActorContext-Scheduler-Thread")
-          t.setDaemon(true)
-          t
-        }
-      }
-    )
-
-    def scheduleMsg[T](a: Actor[T],
-                       msg: T, delay: java.time.Duration)
-                      (implicit fileName: sourcecode.FileName,
-                       line: sourcecode.Line) = {
-      val token = reportSchedule(a, msg, fileName, line)
-      scheduler.schedule[Unit](
-        new java.util.concurrent.Callable[Unit] {
-          def call(): Unit = {
-            a.send(msg)(fileName, line)
-            reportComplete(token)
-          }
-        },
-        delay.toMillis,
-        TimeUnit.MILLISECONDS
-      )
-    }
   }
 
-}
-
-trait Actor[T]{
-  def send(t: T)
-          (implicit fileName: sourcecode.FileName,
-           line: sourcecode.Line): Unit
-
-  def sendAsync(f: scala.concurrent.Future[T])
-               (implicit fileName: sourcecode.FileName,
-                line: sourcecode.Line): Unit
 }

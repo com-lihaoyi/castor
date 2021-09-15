@@ -66,6 +66,9 @@ object castor extends Module {
     def platformSegment = "js"
     def scalaJSVersion = crossScalaJsVersion
     def millSourcePath = super.millSourcePath / os.up
+    override def sources = T.sources {
+      super.sources() ++ Seq(PathRef(millSourcePath / "src-js-native"))
+    }
     object test extends Tests with ActorTestModule {
       def platformSegment = "js"
       def scalaVersion = crossScalaVersion
@@ -86,6 +89,9 @@ object castor extends Module {
     def platformSegment = "native"
     def scalaNativeVersion = crossScalaNativeVersion
     def millSourcePath = super.millSourcePath / os.up
+    override def sources = T.sources {
+      super.sources() ++ Seq(PathRef(millSourcePath / "src-js-native"))
+    }
     object test extends Tests with ActorTestModule {
       def platformSegment = "native"
     }

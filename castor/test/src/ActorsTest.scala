@@ -13,5 +13,13 @@ object ActorsTest extends TestSuite{
         }
       }
     }
+    test("async"){
+      import Context.Simple.global
+      import scala.concurrent.Future
+      object foo extends SimpleActor[Unit]{
+        def run(msg: Unit) = ()
+      }
+      foo.sendAsync(Future(()))
+    }
   }
 }
