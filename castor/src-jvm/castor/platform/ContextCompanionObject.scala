@@ -41,7 +41,7 @@ private [castor] trait ContextCompanionObject {
                         logEx: Throwable => Unit = _.printStackTrace())
     extends ThreadPool(numThreads, daemon, logEx) with Context.TestBase
 
-  trait ContextSimpleCompanionObject {
+  private [castor] trait ContextSimpleCompanionObject {
     lazy val threadPool = makeThreadPool(Runtime.getRuntime().availableProcessors(), true)
   }
 }
