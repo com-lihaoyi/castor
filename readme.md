@@ -30,7 +30,7 @@ Castor Actors can be run on both multithreaded and single-threaded environments,
 including compiled to Javascript via Scala.js.
 
 Castor actors are used heavily in the Cask web framework to model
-[websocket server and client connections](http://www.lihaoyi.com/cask/#websockets),
+[websocket server and client connections](https://com-lihaoyi.github.io/cask/#websockets),
 in the [databricks/devbox](https://github.com/databricks/devbox) file
 synchronizer, and in several other applications on both JVM and JS runtimes.
 
