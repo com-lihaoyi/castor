@@ -1,6 +1,7 @@
 package test.castor
 
 import utest._
+import scala.concurrent.duration._
 object JvmActorsTest extends TestSuite{
   object actor {
     class Logger(log: os.Path, old: os.Path, rotateSize: Int)
@@ -76,7 +77,7 @@ object JvmActorsTest extends TestSuite{
     case class Debounced() extends Msg
     case class Text(value: String) extends Msg
 
-    class Logger(log: os.Path, debounceTime: java.time.Duration)
+    class Logger(log: os.Path, debounceTime: Duration)
                 (implicit ac: castor.Context) extends castor.StateMachineActor[Msg]{
       def initialState = Idle()
       case class Idle() extends State({
@@ -97,7 +98,7 @@ object JvmActorsTest extends TestSuite{
     case class Debounced() extends Msg
     case class Text(value: String) extends Msg
 
-    class Logger(log: os.Path, debounceTime: java.time.Duration)
+    class Logger(log: os.Path, debounceTime: Duration)
                 (implicit ac: castor.Context) extends castor.StateMachineActor[Msg]{
       def initialState = Idle()
       case class Idle() extends State({
@@ -267,7 +268,7 @@ object JvmActorsTest extends TestSuite{
 
       val logPath = os.pwd / "out" / "scratch" / "log.txt"
 
-      val logger = new Logger(logPath, java.time.Duration.ofMillis(50))
+      val logger = new Logger(logPath, Duration(50, MILLISECONDS))
 
       logger.send(Text("I am cow"))
       logger.send(Text("hear me moo"))
@@ -295,7 +296,7 @@ object JvmActorsTest extends TestSuite{
 
       val logPath = os.pwd / "out" / "scratch" / "log.txt"
 
-      val logger = new Logger(logPath, java.time.Duration.ofMillis(50))
+      val logger = new Logger(logPath, Duration(50, MILLISECONDS))
 
       logger.send(Text("I am cow"))
       // Idle() + Text(I am cow) ->

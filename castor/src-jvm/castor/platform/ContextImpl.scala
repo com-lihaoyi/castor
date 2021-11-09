@@ -1,6 +1,7 @@
 package castor.platform
 
 import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
+import scala.concurrent.duration.Duration
 
 import castor._
 
@@ -16,7 +17,7 @@ private [castor] trait ContextImpl extends Context { this: Context.Impl =>
   )
 
   def scheduleMsg[T](a: Actor[T],
-                    msg: T, delay: java.time.Duration)
+                    msg: T, delay: Duration)
                     (implicit fileName: sourcecode.FileName,
                     line: sourcecode.Line) = {
     val token = reportSchedule(a, msg, fileName, line)
