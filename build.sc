@@ -1,4 +1,5 @@
 import mill._, scalalib._, scalajslib._, scalanativelib._, publish._
+import mill.define.Sources
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.4`
@@ -69,6 +70,10 @@ object castor extends Module {
     override def sources = T.sources {
       super.sources() ++ Seq(PathRef(millSourcePath / "src-js"))
     }
+    // override because docJar can not handle duplicate classnames in different folders eg src/src-js/src-native
+    override def docJar: T[PathRef] = T {
+      PathRef(millSourcePath / "src")
+    }
     object test extends Tests with ActorTestModule {
       def platformSegment = "js"
       def scalaVersion = crossScalaVersion
@@ -91,6 +96,10 @@ object castor extends Module {
     def millSourcePath = super.millSourcePath / os.up
     override def sources = T.sources {
       super.sources() ++ Seq(PathRef(millSourcePath / "src-native"))
+    }
+    // override because docJar can not handle duplicate classnames in different folders eg src/src-js/src-native
+    override def docJar: T[PathRef] = T {
+      PathRef(millSourcePath / "src")
     }
     object test extends Tests with ActorTestModule {
       def platformSegment = "native"
