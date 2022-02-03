@@ -1,28 +1,28 @@
 import mill._, scalalib._, scalajslib._, scalanativelib._, publish._
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
-import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.4`
+import $ivy.`com.github.lolgab::mill-mima::0.0.9`
 import com.github.lolgab.mill.mima._
 
-val dottyCustomVersion = sys.props.get("dottyVersion")
+val dottyVersions = sys.props.get("dottyVersion").toList
 
 val scala211 = "2.11.12"
 val scala212 = "2.12.13"
 val scala213 = "2.13.4"
-val scala3 = "3.0.0"
+val scala30 = "3.0.0"
+val scala31 = "3.1.1"
 
-val scalaVersions = scala213 :: scala212 :: scala211 :: scala3 :: dottyCustomVersion.toList
-val scala2Versions = scalaVersions.filter(_.startsWith("2."))
+val scala2VersionsAndDotty = scala213 :: scala212 :: scala211 :: dottyVersions
 
 val scalaJSVersions = for {
-  scalaV <- scalaVersions
+  scalaV <- scala30 :: scala2VersionsAndDotty
   scalaJSV <- Seq("0.6.33", "1.5.1")
   if scalaV.startsWith("2.") || scalaJSV.startsWith("1.")
 } yield (scalaV, scalaJSV)
 
 val scalaNativeVersions = for {
-  scalaV <- scala2Versions
-  scalaNativeV <- Seq("0.4.0")
+  scalaV <- scala31 :: scala2VersionsAndDotty
+  scalaNativeV <- Seq("0.4.3")
 } yield (scalaV, scalaNativeV)
 
 object castor extends Module {
@@ -50,7 +50,7 @@ object castor extends Module {
       millSourcePath / s"src-$platformSegment"
     )
 
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.7")
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.8")
   }
   trait ActorTestModule extends ScalaModule with TestModule.Utest {
     def platformSegment: String
@@ -58,7 +58,7 @@ object castor extends Module {
       millSourcePath / "src",
       millSourcePath / s"src-$platformSegment"
     )
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.10")
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.11")
   }
 
   object js extends Cross[ActorJsModule](scalaJSVersions:_*)
@@ -74,7 +74,7 @@ object castor extends Module {
       def scalaVersion = crossScalaVersion
     }
   }
-  object jvm extends Cross[ActorJvmModule](scalaVersions:_*)
+  object jvm extends Cross[ActorJvmModule](scala30 :: scala2VersionsAndDotty: _*)
   class ActorJvmModule(crossScalaVersion: String) extends ActorModule(crossScalaVersion) {
     def platformSegment = "jvm"
     object test extends Tests with ActorTestModule{
