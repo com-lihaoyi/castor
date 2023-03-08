@@ -81,7 +81,7 @@ object castor extends Module {
     object test extends Tests with ActorTestModule{
       def platformSegment: String = "jvm"
       def ivyDeps = super.ivyDeps() ++ Agg(
-        ivy"com.lihaoyi::os-lib:0.8.1"
+        ivy"com.lihaoyi::os-lib:0.9.1"
       )
     }
   }
