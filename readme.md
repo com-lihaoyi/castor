@@ -1,4 +1,4 @@
-Castor 0.1.7
+Castor 0.3.0
 ============
 
 [![Join the chat at https://gitter.im/lihaoyi/castor](https://badges.gitter.im/lihaoyi/castor.svg)](https://gitter.im/lihaoyi/castor?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -8,14 +8,14 @@ very easy for you to define concurrent data pipelines or state machines.
 
 ```scala
 // Mill
-ivy"com.lihaoyi::castor:0.1.7"
+ivy"com.lihaoyi::castor:0.3.0"
 
 // SBT
-"com.lihaoyi" %% "castor" % "0.1.7"
+"com.lihaoyi" %% "castor" % "0.3.0"
 
 // Scala.js / Scala Native
-ivy"com.lihaoyi::castor::0.1.7"
-"com.lihaoyi" %%% "castor" % "0.1.7"
+ivy"com.lihaoyi::castor::0.3.0"
+"com.lihaoyi" %%% "castor" % "0.3.0"
 ```
 
 Castor Actors are much more lightweight than a full-fledged framework like Akka:
@@ -34,18 +34,23 @@ Castor actors are used heavily in the Cask web framework to model
 in the [databricks/devbox](https://github.com/databricks/devbox) file
 synchronizer, and in several other applications on both JVM and JS runtimes.
 
-- [Castor Actors](#castor-actors)
-- [Writing Actors](#writing-actors)
-  - [Example: Asynchronous Logging using an Actor](#example-asynchronous-logging-using-an-actor)
-  - [Strawman: Synchronized Logging](#strawman-synchronized-logging)
-  - [Parallelism using Actor Pipelines](#parallelism-using-actor-pipelines)
-  - [Batch Logging using BatchActor](#batch-logging-using-batchactor)
-  - [Debounced Logging using State Machines](#debounced-logging-using-state-machines)
-- [Debugging Actors](#debugging-actors)
-  - [Debug Logging State Machines](#debug-logging-state-machines)
-  - [Debugging using Context Logging](#debugging-using-context-logging)
-  - [Running Actors Single Threaded](#running-actors-single-threaded)
-- [Changelog](#changelog)
+- [Castor 0.3.0](#castor-030)
+  - [Castor Actors](#castor-actors)
+  - [Writing Actors](#writing-actors)
+    - [Example: Asynchronous Logging using an Actor](#example-asynchronous-logging-using-an-actor)
+    - [Strawman: Synchronized Logging](#strawman-synchronized-logging)
+    - [Parallelism using Actor Pipelines](#parallelism-using-actor-pipelines)
+    - [Batch Logging using BatchActor](#batch-logging-using-batchactor)
+    - [Debounced Logging using State Machines](#debounced-logging-using-state-machines)
+  - [Debugging Actors](#debugging-actors)
+    - [Debug Logging State Machines](#debug-logging-state-machines)
+    - [Debugging using Context Logging](#debugging-using-context-logging)
+    - [Running Actors Single Threaded](#running-actors-single-threaded)
+  - [Changelog](#changelog)
+    - [0.3.0](#030)
+    - [0.1.7](#017)
+    - [0.1.1](#011)
+    - [0.1.0](#010)
 
 ## Castor Actors
 
@@ -657,6 +662,10 @@ logical bugs without multithreaded parallelism getting in the way.
 
 ## Changelog
 
+### 0.3.0
+
+- Update sourcecode to 0.3.0
+- Drop support for Scala 2.11
 
 ### 0.1.7
 
