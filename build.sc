@@ -7,12 +7,11 @@ import mill.scalalib.api.Util.isScala3
 
 val communityBuildDottyVersion = sys.props.get("dottyVersion").toList
 
-val scala211 = "2.11.12"
 val scala212 = "2.12.17"
 val scala213 = "2.13.10"
 val scala3 = "3.1.3"
 
-val scalaVersions = scala3 :: scala213 :: scala212 :: scala211 :: communityBuildDottyVersion
+val scalaVersions = scala3 :: scala213 :: scala212 :: communityBuildDottyVersion
 
 val scalaJSVersions = scalaVersions.map((_, "1.13.0"))
 val scalaNativeVersions = scalaVersions.map((_, "0.4.10"))
