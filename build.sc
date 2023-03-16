@@ -1,21 +1,20 @@
 import mill._, scalalib._, scalajslib._, scalanativelib._, publish._
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.0`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
-import $ivy.`com.github.lolgab::mill-mima::0.0.10`
+import $ivy.`com.github.lolgab::mill-mima::0.0.13`
 import com.github.lolgab.mill.mima._
 import mill.scalalib.api.Util.isScala3
 
 val communityBuildDottyVersion = sys.props.get("dottyVersion").toList
 
-val scala211 = "2.11.12"
-val scala212 = "2.12.16"
-val scala213 = "2.13.8"
+val scala212 = "2.12.17"
+val scala213 = "2.13.10"
 val scala3 = "3.1.3"
 
-val scalaVersions = scala3 :: scala213 :: scala212 :: scala211 :: communityBuildDottyVersion
+val scalaVersions = scala3 :: scala213 :: scala212 :: communityBuildDottyVersion
 
-val scalaJSVersions = scalaVersions.map((_, "1.10.1"))
-val scalaNativeVersions = scalaVersions.map((_, "0.4.5"))
+val scalaJSVersions = scalaVersions.map((_, "1.13.0"))
+val scalaNativeVersions = scalaVersions.map((_, "0.4.10"))
 
 trait MimaCheck extends Mima {
   def mimaPreviousVersions = VcsVersion.vcsState().lastTag.toSeq
@@ -24,11 +23,6 @@ trait MimaCheck extends Mima {
 object castor extends Module {
   abstract class ActorModule(crossVersion: String) extends CrossScalaModule with PublishModule with MimaCheck {
     def publishVersion = VcsVersion.vcsState().format()
-
-    // Temporary until the next version of Mima gets released with
-    // https://github.com/lightbend/mima/issues/693 included in the release.
-    def mimaPreviousArtifacts =
-      if(isScala3(crossVersion)) Agg.empty[Dep] else super.mimaPreviousArtifacts()
 
     def crossScalaVersion = crossVersion
     def pomSettings = PomSettings(
@@ -51,7 +45,7 @@ object castor extends Module {
       millSourcePath / s"src-$platformSegment"
     )
 
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.8")
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.3.0")
   }
   trait ActorTestModule extends ScalaModule with TestModule.Utest {
     def platformSegment: String
@@ -59,7 +53,7 @@ object castor extends Module {
       millSourcePath / "src",
       millSourcePath / s"src-$platformSegment"
     )
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.0")
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.1")
   }
 
   object js extends Cross[ActorJsModule](scalaJSVersions:_*)
@@ -81,7 +75,7 @@ object castor extends Module {
     object test extends Tests with ActorTestModule{
       def platformSegment: String = "jvm"
       def ivyDeps = super.ivyDeps() ++ Agg(
-        ivy"com.lihaoyi::os-lib:0.8.1"
+        ivy"com.lihaoyi::os-lib:0.9.1"
       )
     }
   }
