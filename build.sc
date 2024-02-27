@@ -7,7 +7,7 @@ import mill.scalalib.api.Util.isScala3
 
 val communityBuildDottyVersion = sys.props.get("dottyVersion").toList
 
-val scala212 = "2.12.17"
+val scala212 = "2.12.19"
 val scala213 = "2.13.10"
 val scala3 = "3.1.3"
 
