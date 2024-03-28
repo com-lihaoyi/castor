@@ -9,7 +9,7 @@ val communityBuildDottyVersion = sys.props.get("dottyVersion").toList
 
 val scala212 = "2.12.17"
 val scala213 = "2.13.10"
-val scala3 = "3.1.3"
+val scala3 = "3.4.1"
 
 val scalaVersions = scala3 :: scala213 :: scala212 :: communityBuildDottyVersion
 
