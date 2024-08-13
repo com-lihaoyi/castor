@@ -47,7 +47,7 @@ object castor extends Module {
       millSourcePath / s"src-$platformSegment"
     )
 
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.4.1")
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.4.2")
   }
   trait ActorTestModule extends ScalaModule with TestModule.Utest with PlatformModule {
     def sources = T.sources(
