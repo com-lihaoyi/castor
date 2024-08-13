@@ -54,7 +54,7 @@ object castor extends Module {
       millSourcePath / "src",
       millSourcePath / s"src-$platformSegment"
     )
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.3")
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.4")
   }
 
   object js extends Cross[ActorJsModule](scalaVersions)
