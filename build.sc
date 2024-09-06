@@ -7,7 +7,7 @@ import mill.scalalib.api.ZincWorkerUtil.isScala3
 
 val communityBuildDottyVersion = sys.props.get("dottyVersion").toList
 
-val scala212 = "2.12.19"
+val scala212 = "2.12.20"
 val scala213 = "2.13.13"
 val scala3 = "3.3.3"
 
