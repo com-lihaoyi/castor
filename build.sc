@@ -71,7 +71,7 @@ object castor extends Module {
   trait ActorJvmModule extends ActorModule {
     object test extends ScalaTests with ActorTestModule{
       def ivyDeps = super.ivyDeps() ++ Agg(
-        ivy"com.lihaoyi::os-lib:0.9.1"
+        ivy"com.lihaoyi::os-lib:0.9.3"
       )
     }
   }
