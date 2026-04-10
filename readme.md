@@ -1,4 +1,4 @@
-Castor 0.3.0
+Castor 0.3.2
 ============
 
 [![Join the chat at https://gitter.im/lihaoyi/castor](https://badges.gitter.im/lihaoyi/castor.svg)](https://gitter.im/lihaoyi/castor?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -540,34 +540,34 @@ exactly why it is misbehaving:
 
 ```scala
 logger.send(Text("I am cow"))
-// Idle() + Text(I am cow) -> 
+// Idle() + Text(I am cow) ->
 // Buffering(Vector(I am cow))
 logger.send(Text("hear me moo"))
-// Buffering(Vector(I am cow)) + Text(hear me moo) -> 
+// Buffering(Vector(I am cow)) + Text(hear me moo) ->
 // Buffering(Vector(I am cow, hear me moo))
 Thread.sleep(100)
-// Buffering(Vector(I am cow, hear me moo)) + Debounced() -> 
+// Buffering(Vector(I am cow, hear me moo)) + Debounced() ->
 // Idle()
 logger.send(Text("I weight twice as much as you"))
-// Idle() + Text(I weight twice as much as you) -> 
+// Idle() + Text(I weight twice as much as you) ->
 // Buffering(Vector(I weight twice as much as you))
 logger.send(Text("And I look good on the barbecue"))
-// Buffering(Vector(I weight twice as much as you)) + Text(And I look good on the barbecue) -> 
+// Buffering(Vector(I weight twice as much as you)) + Text(And I look good on the barbecue) ->
 // Buffering(Vector(I weight twice as much as you, And I look good on the barbecue))
 Thread.sleep(100)
-// Buffering(Vector(I weight twice as much as you, And I look good on the barbecue)) + Debounced() -> 
+// Buffering(Vector(I weight twice as much as you, And I look good on the barbecue)) + Debounced() ->
 // Idle()
 logger.send(Text("Yoghurt curds cream cheese and butter"))
-// Idle() + Text(Yoghurt curds cream cheese and butter) -> 
+// Idle() + Text(Yoghurt curds cream cheese and butter) ->
 // Buffering(Vector(Yoghurt curds cream cheese and butter))
 logger.send(Text("Comes from liquids from my udder"))
 // Buffering(Vector(Yoghurt curds cream cheese and butter)) +
 // Text(Comes from liquids from my udder) -> Buffering(Vector(Yoghurt curds cream cheese and butter, Comes from liquids from my udder))
 logger.send(Text("I am cow, I am cow"))
-// Buffering(Vector(Yoghurt curds cream cheese and butter, Comes from liquids from my udder)) + Text(I am cow, I am cow) -> 
+// Buffering(Vector(Yoghurt curds cream cheese and butter, Comes from liquids from my udder)) + Text(I am cow, I am cow) ->
 // Buffering(Vector(Yoghurt curds cream cheese and butter, Comes from liquids from my udder, I am cow, I am cow))
 logger.send(Text("Hear me moo, moooo"))
-// Buffering(Vector(Yoghurt curds cream cheese and butter, Comes from liquids from my udder, I am cow, I am cow)) + Text(Hear me moo, moooo) -> 
+// Buffering(Vector(Yoghurt curds cream cheese and butter, Comes from liquids from my udder, I am cow, I am cow)) + Text(Hear me moo, moooo) ->
 // Buffering(Vector(Yoghurt curds cream cheese and butter, Comes from liquids from my udder, I am cow, I am cow, Hear me moo, moooo))
 
 ac.waitForInactivity()
@@ -661,6 +661,15 @@ logical bugs without multithreaded parallelism getting in the way.
 
 
 ## Changelog
+
+### 0.3.2
+
+- Upgrade to Scala Native 0.5.x
+- Upgrade build to mill 1.1.x
+
+### 0.3.1
+
+(broken)
 
 ### 0.3.0
 
