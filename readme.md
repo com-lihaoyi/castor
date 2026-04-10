@@ -8,14 +8,14 @@ very easy for you to define concurrent data pipelines or state machines.
 
 ```scala
 // Mill
-ivy"com.lihaoyi::castor:0.3.0"
+ivy"com.lihaoyi::castor:0.3.2"
 
 // SBT
-"com.lihaoyi" %% "castor" % "0.3.0"
+"com.lihaoyi" %% "castor" % "0.3.2"
 
 // Scala.js / Scala Native
-ivy"com.lihaoyi::castor::0.3.0"
-"com.lihaoyi" %%% "castor" % "0.3.0"
+ivy"com.lihaoyi::castor::0.3.2"
+"com.lihaoyi" %%% "castor" % "0.3.2"
 ```
 
 Castor Actors are much more lightweight than a full-fledged framework like Akka:
@@ -34,7 +34,7 @@ Castor actors are used heavily in the Cask web framework to model
 in the [databricks/devbox](https://github.com/databricks/devbox) file
 synchronizer, and in several other applications on both JVM and JS runtimes.
 
-- [Castor 0.3.0](#castor-030)
+- [Castor 0.3.2](#castor-032)
   - [Castor Actors](#castor-actors)
   - [Writing Actors](#writing-actors)
     - [Example: Asynchronous Logging using an Actor](#example-asynchronous-logging-using-an-actor)
