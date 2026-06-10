@@ -55,7 +55,7 @@ object castor extends Module {
       moduleDir / "src",
       moduleDir / s"src-$platformSegment"
     )
-    def mvnDeps = Seq(mvn"com.lihaoyi::utest::0.8.3")
+    def mvnDeps = Seq(mvn"com.lihaoyi::utest::0.8.9")
   }
 
   object js extends Cross[ActorJsModule](scalaVersions)
