@@ -60,7 +60,7 @@ object castor extends Module {
 
   object js extends Cross[ActorJsModule](scalaVersions)
   trait ActorJsModule extends ActorModule with ScalaJSModule {
-    def scalaJSVersion = "1.16.0"
+    def scalaJSVersion = "1.21.0"
     def jsNativeSources = Task.Sources(moduleDir / "src-js-native")
     override def sources = Task { super.sources() ++ jsNativeSources() }
     object test extends ScalaJSTests with ActorTestModule {
